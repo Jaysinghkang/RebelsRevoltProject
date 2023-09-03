@@ -1,3 +1,21 @@
+### RebelsRevolt
+ **An ERC20 token with fixed supply of 1861933694 tokens.**
+
+### PresaleVesting
+ **A vesting smart contract for presale users. Owner will set users, amount once presale is completed** 
+
+ Presale consist of --
+   - immutable vesting duration - 6 months (180 days)
+   - immutable cliff time - 1 month (30 days)
+   - immutable initital unlock - 25% of the total amount
+   - immutable token address - RebelsRevolt
+
+   Once a vesting for user is added, it can not be modified by owner. This is design choice so that owner can't rug by overriding prev. values. 
+
+   All test cases for **RebelsRevolt** and **PresaleVesting** is added in test folder. 
+
+
+
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
