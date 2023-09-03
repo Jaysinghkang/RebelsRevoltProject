@@ -872,6 +872,18 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
        emit MultipleVestingAdded(accounts,amounts);
     }
 
+    /// @dev owner can claim any other erc20 tokens 
+    /// @param _token: token to claim
+    /// Requriements- RebelsRevolt tokens can't be claimed by owner
+    function claimOtherERC20Tokens(address _token) zeroAddressCheck(_token) external onlyOwner {
+        if(_token == address(token)){
+            revert CannotClaimNativeToken();
+        }
+        IERC20 otherERC20 = IERC20(_token);
+        uint256 balance = otherERC20.balanceOf(address(this));
+        otherERC20.safeTransfer(owner(), balance);
+    }
+
     ///@notice  users can claim there tokens using this function
     function claim () external nonReentrant {
        
@@ -910,28 +922,25 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
          
          
     }
-
-    function claimOtherERC20Tokens(address _token) zeroAddressCheck(_token) external onlyOwner {
-        if(_token == address(token)){
-            revert CannotClaimNativeToken();
-        }
-        IERC20 otherERC20 = IERC20(_token);
-        uint256 balance = otherERC20.balanceOf(address(this));
-        otherERC20.safeTransfer(owner(), balance);
-    }
-
+    
+    
+    
+    /// @return global cliff time
     function getGlobalCliffTime () public view returns (uint256){
         return cliffTime;
     }
-
+    
+    /// @return rebelsRevolt token address
     function getTokenAddress() public view returns (address){
         return address(token);
     }
-
+    
+    /// @return global vesting duration
     function getGlobalVestingDuration () public view returns (uint256) {
         return vestingDuration;
     }
-
+    
+    /// @return global initial unlocked percentage
     function getInitialUnlock () public view returns (uint256) {
         return initialUnlockPercentage;
     }
