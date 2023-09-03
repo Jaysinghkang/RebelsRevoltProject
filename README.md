@@ -1,7 +1,7 @@
-### RebelsRevolt
+## RebelsRevolt
  **An ERC20 token with fixed supply of 1861933694 tokens.**
 
-### PresaleVesting
+## PresaleVesting
  **A vesting smart contract for presale users. Owner will set users, amount once presale is completed** 
 
  Presale consist of --
