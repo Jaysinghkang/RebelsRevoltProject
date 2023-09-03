@@ -874,7 +874,7 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
 
     /// @dev owner can claim any other erc20 tokens 
     /// @param _token: token to claim
-    /// Requriements- RebelsRevolt tokens can't be claimed by owner
+    /// Requirements- RebelsRevolt tokens can't be claimed by owner
     function claimOtherERC20Tokens(address _token) zeroAddressCheck(_token) external onlyOwner {
         if(_token == address(token)){
             revert CannotClaimNativeToken();
