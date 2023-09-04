@@ -445,7 +445,7 @@ contract PresaleVestingTest is Test {
         assertEq(claimedAmount, rebelsRevolt.balanceOf(alice));
 
     }
-    
+    ///@dev test to claim rebels revolt token
     function testClaimOtherERC20OwnerWithNativeToken () public {
         vm.startPrank(deployerAddress);
         rebelsRevolt.transfer(address(presaleVesting), 1000 ether);
