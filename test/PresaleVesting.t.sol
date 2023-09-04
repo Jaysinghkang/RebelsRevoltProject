@@ -469,7 +469,7 @@ contract PresaleVestingTest is Test {
 
     }
     ///@dev test to claim rebels revolt token
-    function testClaimOtherERC20OwnerWithNativeToken () public {
+    function testClaimOtherERC20OwnerWithNativeTokenAsAddressInput () public {
         vm.startPrank(deployerAddress);
         rebelsRevolt.transfer(address(presaleVesting), 1000 ether);
         vm.expectRevert();

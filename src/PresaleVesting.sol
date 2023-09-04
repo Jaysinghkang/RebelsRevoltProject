@@ -473,7 +473,7 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
     error ArrayLengthMismatch();
     error ClaimNotStartedYet();
     error UserAlreadyHasVesting();
-    error  CannotClaimNativeToken();
+    error CannotClaimNativeToken();
 
 
     /// @notice token address
@@ -647,21 +647,19 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
                 unlockedTokens = user.initialTokens;
                 user.initialClaimed = true;
             }
-            if(block.timestamp > user.vestingStart){
-                if(block.timestamp > user.vestingEnd){
-                  unlockedTokens = user.totalTokens - user.totalClaimed;
-                }
-                else  {  
+            
+            
+            if(block.timestamp > user.vestingEnd){
+                unlockedTokens = user.totalTokens - user.totalClaimed;
+            }
+                
+            if(block.timestamp >= user.vestingStart && block.timestamp <= user.vestingEnd) {  
                   uint256 timeElapsed = block.timestamp - user.vestingStart;
                   uint256 tokensPerSecond = user.vestedTokens / vestingDuration;
                   uint256 releasedAmount = timeElapsed * tokensPerSecond;
-                  if(!user.initialClaimed){
-                  unlockedTokens = unlockedTokens + releasedAmount;
-                  } else {
-                    unlockedTokens = releasedAmount + user.initialTokens - user.totalClaimed;
-                  }
-                }
+                  unlockedTokens = releasedAmount + user.initialTokens - user.totalClaimed;    
             }
+            
          user.totalClaimed = user.totalClaimed + unlockedTokens;   
          token.safeTransfer(msg.sender, unlockedTokens);
          emit TokensClaimed (msg.sender, unlockedTokens);
