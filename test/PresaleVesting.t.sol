@@ -235,6 +235,26 @@ contract PresaleVestingTest is Test {
 
 
     }
+
+    /// @dev test add vesting when owner has less balance
+    function testAddMultipleVestingWhenOwnerDontHaveEnoughTokens () public {
+        vm.startPrank(deployerAddress);
+        uint256 InitialBalance = rebelsRevolt.balanceOf(deployerAddress);
+        rebelsRevolt.transfer(address(0x1), InitialBalance - 100 ether);
+        rebelsRevolt.approve(address(presaleVesting),300 ether );
+         address[] memory users = new address[](2);
+         uint256[] memory amounts = new uint256[](2);
+
+        users[0] = alice;
+        amounts[0] = 100 ether;
+
+        users[1] = bob;
+        amounts[1] = 200 ether;
+
+        vm.warp(1693718972);
+        vm.expectRevert();
+        presaleVesting.addVestingMultiple(users, amounts);
+    }
    
     /// @dev function test add multiple vesting (by other than owner)
     function testAddMultipleVestingPublic() public {
