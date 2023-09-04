@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {PresaleVesting} from "../src/PresaleVesting.sol";
@@ -10,6 +10,7 @@ contract PresaleVestingTest is Test {
     PresaleVesting public presaleVesting;
     RebelsRevolt public rebelsRevolt;
     address public token;
+    
     address public deployerAddress;
     address bob;
     address alice;
@@ -32,12 +33,17 @@ contract PresaleVestingTest is Test {
     ///////////////Presale Test//////////////////////
     
     ///@dev test vesting addition by the owner
+    /// check if tokens sent to contract
+    /// check if user vesting param are set correctly
     function testAddVestingOwner () public {
         vm.startPrank(deployerAddress);
         rebelsRevolt.approve(address(presaleVesting),100 ether );
+        uint256 initialOwnerBalance = rebelsRevolt.balanceOf(deployerAddress);
         vm.warp(1693718972);
         presaleVesting.addVesting (alice, 100 ether);
         vm.stopPrank();
+        uint256 ownerFinalBalance = initialOwnerBalance - 100 ether;
+        assertEq(ownerFinalBalance + 100 ether, initialOwnerBalance);
         assertEq(100 ether, rebelsRevolt.balanceOf(address(presaleVesting)));
         (uint256 total, uint256 vested, uint256 initial, uint256 totalClaimed, uint256 vestStart, uint256 vestEnd, bool claimed) = presaleVesting.users(alice);
         assertEq(total, 100 ether);
@@ -47,7 +53,9 @@ contract PresaleVestingTest is Test {
         assertEq (vestStart, 1693718972 + 30 days);
         assertEq (vestEnd, 1693718972 + 30 days + 180 days);
         assertEq (claimed, false);
+
     }
+
     
     ///@dev test add vesting function when address input is zero
     function testAddVestingOwnerWhenAddressIsZero() public {
@@ -376,6 +384,23 @@ contract PresaleVestingTest is Test {
         presaleVesting.claim();
         
     }
+
+     /// @dev test claim when cliff just end
+    function testClaimWhenCliffPeriodJustEnds() public {
+         vm.startPrank(deployerAddress);
+        rebelsRevolt.approve(address(presaleVesting),100 ether );
+        vm.warp(1693718972);
+        presaleVesting.addVesting (alice, 100 ether);
+        vm.stopPrank();
+        
+        vm.prank(alice);
+        vm.warp(1693718971 + 30 days);
+        presaleVesting.claim();
+        (,,,uint256 claimed,,, bool value) = presaleVesting.users(alice);
+        uint256 aliceBalance = rebelsRevolt.balanceOf(alice);
+        assertEq(value, true);
+        assertEq(aliceBalance, claimed);
+    }
     
     /// @dev test claim after vesting ends
     function testClaimAfterVestingPeriodIsOver () public {
@@ -421,12 +446,9 @@ contract PresaleVestingTest is Test {
 
     }
     
-    /// @dev test claim other erc20 function when rebels revolt is entered as input
-    function testClaimOtherERC20Owner() public {
-         vm.startPrank(deployerAddress);
-        rebelsRevolt.approve(address(presaleVesting), 1000 ether);
-        vm.warp(1693718972);
-        presaleVesting.addVesting(alice, 1000 ether);
+    function testClaimOtherERC20OwnerWithNativeToken () public {
+        vm.startPrank(deployerAddress);
+        rebelsRevolt.transfer(address(presaleVesting), 1000 ether);
         vm.expectRevert();
         presaleVesting.claimOtherERC20Tokens(address(rebelsRevolt));
 
@@ -435,13 +457,12 @@ contract PresaleVestingTest is Test {
     /// @dev test claimOtherERC20 if input is address zero
      function testClaimOtherERC20OwnerWithZeroAddressAsInput() public {
          vm.startPrank(deployerAddress);
-        rebelsRevolt.approve(address(presaleVesting), 1000 ether);
-        vm.warp(1693718972);
-        presaleVesting.addVesting(alice, 1000 ether);
         vm.expectRevert();
         presaleVesting.claimOtherERC20Tokens(address(0));
 
     }
+
+   
     
     /// @dev test if claim other erc20 is called by other than owner
     function testClaimOtherERC20Public () public {
