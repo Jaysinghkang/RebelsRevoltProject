@@ -14,7 +14,56 @@
 
    All test cases for **RebelsRevolt** and **PresaleVesting** is added in test folder. 
 
+## Gas Reports
 
+| src/PresaleVesting.sol:PresaleVesting contract |                 |        |        |        |         |
+|------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                | Deployment Size |        |        |        |         |
+| 979906                                         | 5091            |        |        |        |         |
+| Function Name                                  | min             | avg    | median | max    | # calls |
+| addVesting                                     | 446             | 106703 | 134266 | 154166 | 19      |
+| addVestingMultiple                             | 1624            | 75310  | 3391   | 272079 | 7       |
+| claim                                          | 3811            | 34362  | 9524   | 73145  | 23      |
+| claimOtherERC20Tokens                          | 469             | 3614   | 2693   | 6712   | 5       |
+| getGlobalCliffTime                             | 192             | 192    | 192    | 192    | 1       |
+| getGlobalVestingDuration                       | 237             | 237    | 237    | 237    | 1       |
+| getInitialUnlock                               | 204             | 204    | 204    | 204    | 1       |
+| getTokenAddress                                | 192             | 192    | 192    | 192    | 1       |
+| owner                                          | 342             | 1008   | 342    | 2342   | 3       |
+| renounceOwnership                              | 498             | 3560   | 4060   | 5622   | 4       |
+| transferOwnership                              | 2677            | 4217   | 2731   | 7243   | 3       |
+| users                                          | 1413            | 1413   | 1413   | 1413   | 20      |
+
+
+| src/RebelsRevolt.sol:RebelsRevolt contract |                 |       |        |       |         |
+|--------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                            | Deployment Size |       |        |       |         |
+| 628950                                     | 3780            |       |        |       |         |
+| Function Name                              | min             | avg   | median | max   | # calls |
+| allowance                                  | 804             | 804   | 804    | 804   | 3       |
+| approve                                    | 599             | 23760 | 24651  | 24651 | 27      |
+| balanceOf                                  | 629             | 879   | 629    | 2629  | 32      |
+| decimals                                   | 222             | 222   | 222    | 222   | 1       |
+| decreaseAllowance                          | 2811            | 2864  | 2811   | 2972  | 3       |
+| increaseAllowance                          | 3002            | 10336 | 3054   | 24954 | 3       |
+| name                                       | 3201            | 3201  | 3201   | 3201  | 1       |
+| owner                                      | 346             | 1012  | 346    | 2346  | 3       |
+| renounceOwnership                          | 432             | 3502  | 4002   | 5572  | 4       |
+| symbol                                     | 3244            | 3244  | 3244   | 3244  | 1       |
+| totalSupply                                | 2349            | 2349  | 2349   | 2349  | 1       |
+| transfer                                   | 562             | 22039 | 24994  | 29794 | 99      |
+| transferFrom                               | 2802            | 23063 | 25983  | 32478 | 21      |
+| transferOwnership                          | 2655            | 4199  | 2720   | 7224  | 3       |
+
+## Test Coverage
+ 
+Ran 2 test suites: 70 tests passed, 0 failed, 0 skipped (70 total tests)
+
+| File                   | % Lines          | % Statements     | % Branches     | % Funcs        |
+|------------------------|------------------|------------------|----------------|----------------|
+| src/PresaleVesting.sol | 76.29% (74/97)   | 77.42% (96/124)  | 65.91% (29/44) | 57.14% (16/28) |
+| src/RebelsRevolt.sol   | 76.92% (50/65)   | 79.17% (57/72)   | 76.92% (20/26) | 88.00% (22/25) |
+| Total                  | 76.54% (124/162) | 78.06% (153/196) | 70.00% (49/70) | 71.70% (38/53) |
 
 ## Foundry
 
