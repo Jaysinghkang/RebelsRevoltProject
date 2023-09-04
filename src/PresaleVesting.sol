@@ -649,8 +649,8 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
                 
             if(block.timestamp >= user.vestingStart && block.timestamp <= user.vestingEnd) {  
                   uint256 timeElapsed = block.timestamp - user.vestingStart;
-                  uint256 tokensPerSecond = user.vestedTokens / vestingDuration;
-                  uint256 releasedAmount = timeElapsed * tokensPerSecond;
+            
+                  uint256 releasedAmount = (timeElapsed * user.vestedTokens) / vestingDuration;
                   unlockedTokens = releasedAmount + user.initialTokens - user.totalClaimed;    
             }
             
