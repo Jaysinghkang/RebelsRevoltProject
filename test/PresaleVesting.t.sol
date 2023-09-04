@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {PresaleVesting} from "../src/PresaleVesting.sol";
 import {RebelsRevolt} from "../src/RebelsRevolt.sol";
+import {IERC20} from "../src/RebelsRevolt.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 
 contract PresaleVestingTest is Test {
     PresaleVesting public presaleVesting;
     RebelsRevolt public rebelsRevolt;
     address public token;
+    IERC20 dai;
+    
     address public deployerAddress;
     address bob;
     address alice;
@@ -20,6 +23,7 @@ contract PresaleVestingTest is Test {
         vm.startPrank(deployerAddress);
         rebelsRevolt = new RebelsRevolt();
         token = address(rebelsRevolt);
+        dai = new RebelsRevolt();
         presaleVesting = new PresaleVesting(token);
        
 
@@ -32,12 +36,17 @@ contract PresaleVestingTest is Test {
     ///////////////Presale Test//////////////////////
     
     ///@dev test vesting addition by the owner
+    /// check if tokens sent to contract
+    /// check if user vesting param are set correctly
     function testAddVestingOwner () public {
         vm.startPrank(deployerAddress);
         rebelsRevolt.approve(address(presaleVesting),100 ether );
+        uint256 initialOwnerBalance = rebelsRevolt.balanceOf(deployerAddress);
         vm.warp(1693718972);
         presaleVesting.addVesting (alice, 100 ether);
         vm.stopPrank();
+        uint256 ownerFinalBalance = initialOwnerBalance - 100 ether;
+        assertEq(ownerFinalBalance + 100 ether, initialOwnerBalance);
         assertEq(100 ether, rebelsRevolt.balanceOf(address(presaleVesting)));
         (uint256 total, uint256 vested, uint256 initial, uint256 totalClaimed, uint256 vestStart, uint256 vestEnd, bool claimed) = presaleVesting.users(alice);
         assertEq(total, 100 ether);
@@ -47,7 +56,9 @@ contract PresaleVestingTest is Test {
         assertEq (vestStart, 1693718972 + 30 days);
         assertEq (vestEnd, 1693718972 + 30 days + 180 days);
         assertEq (claimed, false);
+
     }
+
     
     ///@dev test add vesting function when address input is zero
     function testAddVestingOwnerWhenAddressIsZero() public {
@@ -224,6 +235,26 @@ contract PresaleVestingTest is Test {
 
 
     }
+
+    /// @dev test add vesting when owner has less balance
+    function testAddMultipleVestingWhenOwnerDontHaveEnoughTokens () public {
+        vm.startPrank(deployerAddress);
+        uint256 InitialBalance = rebelsRevolt.balanceOf(deployerAddress);
+        rebelsRevolt.transfer(address(0x1), InitialBalance - 100 ether);
+        rebelsRevolt.approve(address(presaleVesting),300 ether );
+         address[] memory users = new address[](2);
+         uint256[] memory amounts = new uint256[](2);
+
+        users[0] = alice;
+        amounts[0] = 100 ether;
+
+        users[1] = bob;
+        amounts[1] = 200 ether;
+
+        vm.warp(1693718972);
+        vm.expectRevert();
+        presaleVesting.addVestingMultiple(users, amounts);
+    }
    
     /// @dev function test add multiple vesting (by other than owner)
     function testAddMultipleVestingPublic() public {
@@ -272,7 +303,7 @@ contract PresaleVestingTest is Test {
     }
     
     /// @dev test renounce ownership (by owner)
-    function testRenounceOwnerhsipOwner () public {
+    function testRenounceOwnershipOwner () public {
         vm.prank(deployerAddress);
         presaleVesting.renounceOwnership();
         assertEq(presaleVesting.owner(), address(0));
@@ -376,6 +407,23 @@ contract PresaleVestingTest is Test {
         presaleVesting.claim();
         
     }
+
+     /// @dev test claim when cliff just end
+    function testClaimWhenCliffPeriodJustEnds() public {
+         vm.startPrank(deployerAddress);
+        rebelsRevolt.approve(address(presaleVesting),100 ether );
+        vm.warp(1693718972);
+        presaleVesting.addVesting (alice, 100 ether);
+        vm.stopPrank();
+        
+        vm.prank(alice);
+        vm.warp(1693718971 + 30 days);
+        presaleVesting.claim();
+        (,,,uint256 claimed,,, bool value) = presaleVesting.users(alice);
+        uint256 aliceBalance = rebelsRevolt.balanceOf(alice);
+        assertEq(value, true);
+        assertEq(aliceBalance, claimed);
+    }
     
     /// @dev test claim after vesting ends
     function testClaimAfterVestingPeriodIsOver () public {
@@ -420,40 +468,50 @@ contract PresaleVestingTest is Test {
         assertEq(claimedAmount, rebelsRevolt.balanceOf(alice));
 
     }
-    
-    /// @dev test claim other erc20 function when rebels revolt is entered as input
-    function testClaimOtherERC20Owner() public {
-         vm.startPrank(deployerAddress);
-        rebelsRevolt.approve(address(presaleVesting), 1000 ether);
-        vm.warp(1693718972);
-        presaleVesting.addVesting(alice, 1000 ether);
+    ///@dev test to claim rebels revolt token
+    function testClaimOtherERC20OwnerWithNativeTokenAsAddressInput () public {
+        vm.startPrank(deployerAddress);
+        rebelsRevolt.transfer(address(presaleVesting), 1000 ether);
         vm.expectRevert();
         presaleVesting.claimOtherERC20Tokens(address(rebelsRevolt));
 
+    }
+
+    ///@dev test claim other erc20 with valid erc20 address (other than native token)
+    function testOtherERC20withValidAddressOwner () public {
+        vm.startPrank(deployerAddress);
+        dai.transfer(address(presaleVesting), 1000 ether);
+        uint256 amountBefore = dai.balanceOf(deployerAddress);
+        presaleVesting.claimOtherERC20Tokens(address(dai));
+        uint256 amountAfter = dai.balanceOf(deployerAddress);
+        assertEq(amountAfter - amountBefore, 1000 ether);
     }
     
     /// @dev test claimOtherERC20 if input is address zero
      function testClaimOtherERC20OwnerWithZeroAddressAsInput() public {
          vm.startPrank(deployerAddress);
-        rebelsRevolt.approve(address(presaleVesting), 1000 ether);
-        vm.warp(1693718972);
-        presaleVesting.addVesting(alice, 1000 ether);
         vm.expectRevert();
         presaleVesting.claimOtherERC20Tokens(address(0));
 
     }
+
+    /// @dev test claimOtherERC20 with random address as input
+    function testClaimOtherERC20OwnerWithRandomAddressAsInput() public {
+         vm.startPrank(deployerAddress);
+        vm.expectRevert();
+        presaleVesting.claimOtherERC20Tokens(address(0x123));
+
+    }
+
+   
     
     /// @dev test if claim other erc20 is called by other than owner
     function testClaimOtherERC20Public () public {
-        vm.startPrank(deployerAddress);
-        rebelsRevolt.approve(address(presaleVesting), 1000 ether);
-        vm.warp(1693718972);
-        presaleVesting.addVesting(alice, 1000 ether);
-        vm.stopPrank();
-        vm.startPrank(alice);
+        vm.prank(deployerAddress);
+        dai.transfer(address(presaleVesting), 1000 ether);
+        vm.prank(alice);
         vm.expectRevert();
-        presaleVesting.claimOtherERC20Tokens(address(rebelsRevolt));
-        vm.stopPrank();
+        presaleVesting.claimOtherERC20Tokens(address(dai));
 
     }
     
