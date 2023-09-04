@@ -4,12 +4,14 @@ pragma solidity ^0.8.21;
 import {Test, console2} from "forge-std/Test.sol";
 import {PresaleVesting} from "../src/PresaleVesting.sol";
 import {RebelsRevolt} from "../src/RebelsRevolt.sol";
+import {IERC20} from "../src/RebelsRevolt.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 
 contract PresaleVestingTest is Test {
     PresaleVesting public presaleVesting;
     RebelsRevolt public rebelsRevolt;
     address public token;
+    IERC20 dai;
     
     address public deployerAddress;
     address bob;
@@ -21,6 +23,7 @@ contract PresaleVestingTest is Test {
         vm.startPrank(deployerAddress);
         rebelsRevolt = new RebelsRevolt();
         token = address(rebelsRevolt);
+        dai = new RebelsRevolt();
         presaleVesting = new PresaleVesting(token);
        
 
@@ -280,7 +283,7 @@ contract PresaleVestingTest is Test {
     }
     
     /// @dev test renounce ownership (by owner)
-    function testRenounceOwnerhsipOwner () public {
+    function testRenounceOwnershipOwner () public {
         vm.prank(deployerAddress);
         presaleVesting.renounceOwnership();
         assertEq(presaleVesting.owner(), address(0));
@@ -453,6 +456,16 @@ contract PresaleVestingTest is Test {
         presaleVesting.claimOtherERC20Tokens(address(rebelsRevolt));
 
     }
+
+    ///@dev test claim other erc20 with valid erc20 address (other than native token)
+    function testOtherERC20withValidAddressOwner () public {
+        vm.startPrank(deployerAddress);
+        dai.transfer(address(presaleVesting), 1000 ether);
+        uint256 amountBefore = dai.balanceOf(deployerAddress);
+        presaleVesting.claimOtherERC20Tokens(address(dai));
+        uint256 amountAfter = dai.balanceOf(deployerAddress);
+        assertEq(amountAfter - amountBefore, 1000 ether);
+    }
     
     /// @dev test claimOtherERC20 if input is address zero
      function testClaimOtherERC20OwnerWithZeroAddressAsInput() public {
@@ -462,19 +475,23 @@ contract PresaleVestingTest is Test {
 
     }
 
+    /// @dev test claimOtherERC20 with random address as input
+    function testClaimOtherERC20OwnerWithRandomAddressAsInput() public {
+         vm.startPrank(deployerAddress);
+        vm.expectRevert();
+        presaleVesting.claimOtherERC20Tokens(address(0x123));
+
+    }
+
    
     
     /// @dev test if claim other erc20 is called by other than owner
     function testClaimOtherERC20Public () public {
-        vm.startPrank(deployerAddress);
-        rebelsRevolt.approve(address(presaleVesting), 1000 ether);
-        vm.warp(1693718972);
-        presaleVesting.addVesting(alice, 1000 ether);
-        vm.stopPrank();
-        vm.startPrank(alice);
+        vm.prank(deployerAddress);
+        dai.transfer(address(presaleVesting), 1000 ether);
+        vm.prank(alice);
         vm.expectRevert();
-        presaleVesting.claimOtherERC20Tokens(address(rebelsRevolt));
-        vm.stopPrank();
+        presaleVesting.claimOtherERC20Tokens(address(dai));
 
     }
     
