@@ -488,7 +488,7 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
     /// @notice owner set vesting for account
     /// @param account: user address
     /// @param amount: total tokens to be alloted
-    function addVesting (address account, uint256 amount) zeroAddressCheck(account) zeroAmountCheck(amount) external onlyOwner {
+    function addVesting (address account, uint256 amount) zeroAddressCheck(account) zeroAmountCheck(amount) external nonReentrant onlyOwner {
          User storage user = users[account];
          if(user.totalTokens > 0){
             revert UserAlreadyHasVesting();
@@ -515,7 +515,7 @@ contract PresaleVesting is Ownable, ReentrancyGuard {
     /// @notice add vesting to multiple accounts
     /// @param accounts: users address array
     /// @param amounts: amounts array to alloted for each user 
-    function addVestingMultiple  (address[] calldata accounts, uint256[] calldata amounts) external onlyOwner {
+    function addVestingMultiple  (address[] calldata accounts, uint256[] calldata amounts) external nonReentrant onlyOwner {
         uint256 accountsLength = accounts.length;
         uint256 amountsLength = amounts.length;
         if(accountsLength != amountsLength){
